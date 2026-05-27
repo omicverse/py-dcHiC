@@ -1,0 +1,28 @@
+# Build
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Upstream R clone (kept locally for inspection, not shipped)
+dcHiC-ref/
+
+# Large / generated fixtures + cached reference outputs
+data/*.rds
+data/*.h5ad
+data/raw/
+data/reference_output.json
+data/candidate_output.json
+
+# IDE
+.vscode/
+.idea/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Notebook checkpoints
+.ipynb_checkpoints/

@@ -1,0 +1,76 @@
+# Pre-registered parity gate for py-dcHiC
+#
+# COMMITTED BEFORE THE AGENT LOOP BEGINS (Phase 0).
+# These fields are READ-ONLY after the Equivalence/Acceleration loop starts.
+# Do not tighten or loosen any threshold to make the port pass — fix the port.
+
+package: py-dcHiC
+upstream:
+  name: dcHiC
+  version: "2.1"                       # ay-lab/dcHiC @ 144b4df (2024-01-10); functionsdchic 1.1
+  source: GitHub
+  url: https://github.com/ay-lab/dcHiC
+  paper: "Nature Communications 2022, s41467-022-34626-6"
+
+# Scope: compartment calling (cis + select) + differential analysis (analyze).
+# Out of scope: subcompartment HMM (depmixS4), fithic differential loops, IGV/HTML
+# viz, gene enrichment — all plotting / GUI / S4-heavy per protocol "when NOT to use".
+
+# Two outputs of DIFFERENT algorithm classes -> two gates, ALL must pass.
+# Top-level fields are fallbacks; per-output blocks below are authoritative.
+algorithm_class: embedding
+parity_threshold: 0.95
+
+# Canonical fixture — a single bundle driving BOTH stages:
+#   * a small intra-chromosomal contact matrix + gene-density track (compartment calling)
+#   * a bins x samples PC matrix from the demo, multi-condition (differential analysis)
+fixture:
+  path: data/fixture_dchic.json
+  source: "Derived from ay-lab/dcHiC demo (mouse, 250Kb) + a deterministic synthetic Hi-C block matrix"
+  description: "One-chromosome O/E-ready contact matrix (compartment calling) + multi-sample PC matrix (differential)"
+  expected_shape: "see builder: tests/build_fixture.R"
+
+# How the R reference is invoked:  Rscript <reference_command> <fixture> <output.json>
+reference_command: tests/r_reference_driver.R
+
+# RNG seed. Compartment PCA + Mahalanobis are deterministic given the fixture; seed
+# pins any tie-breaking. Set in BOTH r_reference_driver.R and _run_candidate.py.
+seed: 42
+
+outputs:
+  # --- Stage A: compartment calling -------------------------------------------
+  # A/B compartment score = oriented PC1 of the O/E correlation matrix (per bin).
+  # PCA eigenvectors carry a sign ambiguity; dcHiC orients PC1 by gene density.
+  # Pearson |r| (ordinal) absorbs residual sign and is TIGHTER than Procrustes for
+  # a 1-D oriented vector. Default ordinal threshold 0.99 (read-only).
+  - name: compartment_pc1
+    type: "1d vector (per genomic bin)"
+    location_reference: "$.compartment_pc1"
+    location_candidate: "compartment_pc1"
+    metric: ordinal
+    threshold: 0.99
+
+  # --- Stage B: differential analysis -----------------------------------------
+  # Per-bin differential-compartment significance (Mahalanobis distance -> p-value
+  # -> multiple-testing adjustment). Statistical-inference class: rank-correlation
+  # on -log10(p) AND top-K overlap. Thresholds (read-only): Spearman >= 0.90, top50 Jaccard >= 0.7.
+  - name: differential_padj
+    type: "1d vector of adjusted p-values (per genomic bin)"
+    location_reference: "$.differential_padj"
+    location_candidate: "differential_padj"
+    metric: inference
+    threshold: 0.90
+
+held_out_fixture:
+  path: null
+  description: null
+
+acceleration:
+  enabled: true
+  max_iterations: 20
+  must_pass_gate: true
+
+audit_class: null
+
+created_by: claude-opus (omicverse-rebuildr agent)
+created_at: 2026-05-26
