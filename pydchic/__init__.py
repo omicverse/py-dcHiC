@@ -21,6 +21,7 @@ from .differential import (
     calcen,
     bh_adjust,
 )
+from .analyze import analyze, read_input_file
 
 __all__ = [
     "dcHiC",
@@ -33,5 +34,7 @@ __all__ = [
     "quantile_normalize_by_condition",
     "calcen",
     "bh_adjust",
+    "analyze",
+    "read_input_file",
 ]
-__version__ = "0.1.0"
+__version__ = "0.1.1"

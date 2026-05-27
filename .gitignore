@@ -26,3 +26,4 @@ htmlcov/
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+data/fixture_dchic.json

@@ -55,6 +55,28 @@ model = dcHiC(resolution=100_000).differential(pc_raw, conditions)
 model.differential_.sort_values("padj").head()
 ```
 
+### Drop-in for the dcHiC `analyze` CLI
+
+`pydchic.analyze` reproduces
+
+```bash
+Rscript dchicf.r --file script/all_input.txt --pcatype analyze --dirovwt T --diffdir all
+```
+
+directly in Python (after a prior `cis`/`select` run has produced the per-sample
+`*_pca/intra_pca/*_mat/<chr>.pc.bedGraph` files):
+
+```python
+import pydchic
+res = pydchic.analyze("script/all_input.txt", workdir=".", diffdir="all")
+# writes DifferentialResult/all/fdr_result/differential.intra_sample_combined.pcQnm.bedGraph
+#   (+ the .Filtered. subset at padj < fdr_thr); returns the genome-wide bins table.
+```
+
+It reads the same `input.txt` (columns: matrix, bed, prefix, prefix.master), quantile-normalises
+across all replicates per chromosome, computes the per-chromosome robust Mahalanobis p-value, and
+adjusts genome-wide (BH; dcHiC uses IHW — see `MATH.md`).
+
 ## What's included (Python ⇄ R map)
 
 | Python | dcHiC R | Stage |
@@ -66,6 +88,7 @@ model.differential_.sort_values("padj").head()
 | `normalize_quantiles` | `limma::normalizeQuantiles` | differential |
 | `calcen` | `calcen` | differential |
 | `differential_compartments` | `pcanalyze` (Mahalanobis + chi-sq) | differential |
+| `analyze` | `dchicf.r --pcatype analyze` (full driver) | differential |
 
 ## Reproducing the R parity check
 
