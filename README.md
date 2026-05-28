@@ -22,8 +22,18 @@ recovered — despite the unavoidable robust-covariance / IHW library substituti
 
 ## Install
 
+Install from source (the import module is `pydchic`):
+
 ```bash
-pip install pydchic
+pip install git+https://github.com/ChrisMao0325/py-dcHiC.git
+```
+
+or clone for development:
+
+```bash
+git clone https://github.com/ChrisMao0325/py-dcHiC.git
+cd py-dcHiC
+pip install -e ".[dev]"
 ```
 
 ## Quickstart
